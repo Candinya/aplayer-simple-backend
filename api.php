@@ -1,16 +1,28 @@
 <?php
 /****************选项设置部分开始****************/
-// 网易云音乐需要使用的cookies，为防止公开cookies被
+// 网易云音乐需要使用的cookie，为防止公开cookie被
 // 封锁导致的请求异常，请您自行采集需要使用的cookie
 $nmCookie = 'info=please_set_your_own_cookies;';
 
-// 允许的域名，强烈建议您修改此项，以避免API被滥用
-// 等的情况发生。
-$allowedDomain = '*';
+// 是否开启白名单模式
+$whiteListMode = true;
+
+// 白名单模式下允许的跨域来源，请设置你的来源，或者关闭白名单模式
+$allowedOrigins = array('https://candinya.com', 'http://localhost:4000');
 
 /****************选项设置部分结束****************/
 
 /****************环境准备部分开始****************/
+// 默认全部放行，以便于消息传递
+header('Access-Control-Allow-Origin: *');
+
+// 白名单模式时，未进入白名单的直接拒绝
+if ($whiteListMode && isset($_SERVER['HTTP_ORIGIN']) && !in_array($_SERVER['HTTP_ORIGIN'], $allowedOrigins)) {
+    http_response_code(403);
+    // 直接die掉，避免资源浪费
+	die('Not in the whitelist');
+}
+
 // 获取加载环境
 require 'vendor/autoload.php';
 // 使用Meting框架
@@ -137,7 +149,6 @@ function dataForAplayer($api, $idType, $idVal) {
 if ($retType === '302') {
     header('Location: '.$data, true, 302);
 } else {
-	header('Access-Control-Allow-Origin: '.$allowedDomain);
     header('Content-Type:'.$retType.'; charset=utf-8');
     echo $data;
 }
